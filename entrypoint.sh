@@ -14,9 +14,22 @@ BACKUP_COMPRESSED="${BACKUP_FILE}.tar.gz"
 if [ $? -eq 0 ]; then
     tar -czvf $BACKUP_COMPRESSED $BACKUP_FILE
     s3cmd --config=/s3cmd/s3cmd put "$BACKUP_COMPRESSED" s3://${BUCKET}/$BACKUP_COMPRESSED --no-mime-magic
-    echo "$TIMESTAMP - Backup Succeeded"
+    echo "$TIMESTAMP - SQLite Backup Succeeded"
 else 
-    echo "$TIMESTAMP - Backup Failed"
+    echo "$TIMESTAMP - SQLite Backup Failed"
+fi
+
+## Directory backup
+if [[ ! -v BACKUP_THIS_DIRECTORY ]]; then
+    if [ -d ${BACKUP_THIS_DIRECTORY} ]; then
+        ARCHIVE_NAME="$(basename ${BACKUP_THIS_DIRECTORY}).tar.gz"
+        echo "$TIMESTAMP - Creating archive $ARCHIVE_NAME"
+        tar -czvf $ARCHIVE_NAME ${BACKUP_THIS_DIRECTORY}
+        s3cmd --config=/s3cmd/s3cmd put "$ARCHIVE_NAME" s3://${BUCKET}/$ARCHIVE_NAME --no-mime-magic
+        echo "$TIMESTAMP - Directory Backup Succeeded"
+    else
+        echo "$TIMESTAMP - Directory does not exist"
+    fi
 fi
 
 ## Perform retention policy
@@ -38,7 +51,7 @@ else
                 echo "$fileName is older than ${DAYS_TO_KEEP} days, deleting"
                 if [[ $fileName != "" ]]
                 then
-                    #s3cmd --config=/s3cmd/s3cmd del "$fileName"
+                    s3cmd --config=/s3cmd/s3cmd del "$fileName"
                 fi
             fi
         done;
