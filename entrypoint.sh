@@ -29,9 +29,9 @@ fi
 ## Directory backup
 if [ ! -z "${BACKUP_THIS_DIRECTORY}" ]; then
     if [ -d "${BACKUP_THIS_DIRECTORY}" ]; then
-        ARCHIVE_NAME="$(basename ${BACKUP_THIS_DIRECTORY}).tar.gz"
+        ARCHIVE_NAME="$(basename ${BACKUP_THIS_DIRECTORY})_$TIMESTAMP.tar.gz"
         echo "$TIMESTAMP - Creating archive $ARCHIVE_NAME"
-        tar -czvf $ARCHIVE_NAME ${BACKUP_THIS_DIRECTORY}
+        tar -czvf $ARCHIVE_NAME_$TIMESTAMP ${BACKUP_THIS_DIRECTORY}
         if [ ! -z "${ENCRYPT_BACKUPS}" ]; then
             cat /etc/enc-key/key | gpg --passphrase-fd 0 --batch --quiet --yes -c -o $ARCHIVE_NAME.gpg $ARCHIVE_NAME
             s3cmd --config=/s3cmd/s3cmd put "$ARCHIVE_NAME.gpg" s3://${BUCKET}/$ARCHIVE_NAME.gpg --no-mime-magic
@@ -55,7 +55,7 @@ else
             createDate=`echo $line | awk {'print $1'}`
             currentDate=`date +'%Y-%m-%d'`            
             dateDiff=$(( (`date -d $currentDate +%s` - `date -d $createDate +%s`) / (24*3600) ))
-            if [[ $dateDiff -gt $olderThan ]]
+            if [[ $dateDiff -gt ${DAYS_TO_KEEP} ]]
             then 
                 fileName=`echo $line|awk {'print $4'}`
                 echo "$fileName is older than ${DAYS_TO_KEEP} days, deleting"
