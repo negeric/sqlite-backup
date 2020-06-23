@@ -50,7 +50,7 @@ if [ -z "${DAYS_TO_KEEP}" ]; then
     echo "No retention policy set.  Job is complete"
 else
     echo "Retention policy configured.  Deleting backups older than ${DAYS_TO_KEEP} days"
-    s3cmd --config=/s3cmd/s3cmd ls s3://terraform-/backups/bitwarden/ | grep " DIR " -v | while read -r line
+    s3cmd --config=/s3cmd/s3cmd ls s3://${BUCKET} | grep " DIR " -v | while read -r line
         do
             createDate=`echo $line | awk {'print $1'}`
             currentDate=`date +'%Y-%m-%d'`            
